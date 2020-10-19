@@ -1,6 +1,9 @@
 #include "board.hpp"
+#include "bitmanipulations.hpp"
 #include <iostream>
 #include <iomanip>
+
+namespace bm = bitmanipulations;
 
 g2048::board::board() {
 	rnd = std::mt19937(seed());
@@ -9,54 +12,53 @@ g2048::board::board() {
 			j = 0;
 		}
 	}
-	put_random();
-	put_random();
-	put_random();
-	put_random();
+	for (int i = 0; i < initial_panel; i++) {
+		put_random();
+	}
+	get_mobility();
+}
+
+bool g2048::board::undo() {
+	if (history.empty() == true) {
+		return false;
+	}
+	data = history.end()->data;
+	next = history.end()->next;
+	history.pop_back();
+	return true;
+}
+
+int g2048::board::get_sum(const field fd) const{
+	int sum = 0;
+	for (int i = 0; i < size; i++) {
+		for (int j = 0; j < size; j++) {
+			sum += fd[i][j];
+		}
+	}
+	return sum;
 }
 
 bool g2048::board::move(const direction d) {
-	bool frag = false;
+	if (get_sum(next[d]) == 0) {
+		return false;
+	}
 	switch (d) {
 		case upper:
-			diagonal_flip();
-			horizontal_flip();
-			break;
 		case lower:
-			diagonal_flip();
-			break;
 		case right:
+		case left:{
 			break;
-		case left:
-			horizontal_flip();
-			break;
-		default:
+		}
+		default:{
 			return false;
+		}
 	}
 
-	if (slide() == true) {
-		frag = true;
-	}
-	if (marge() == true) {
-		frag = true;
-		slide();
-	}
-
-	switch (d) {
-		case upper:
-			horizontal_flip();
-			diagonal_flip();
-			break;
-		case lower:
-			diagonal_flip();
-			break;
-		case right:
-			break;
-		case left:
-			horizontal_flip();
-			break;
-	}
-	return frag;
+	history.push_back(log(data, next));
+	data = next[d];
+	put_random();
+	get_mobility();
+	return true;
 }
 
 void g2048::board::show() const{
@@ -89,6 +91,66 @@ void g2048::board::show() const{
 		std::cout << '\n';
 	}
 	std::cout << '\n';
+}
+
+int g2048::board::get_mobility() {
+	int count = 4;
+	for (direction i = 0; i < 4; i++) {
+		next[i] = get_next(i);
+		if (next[i] == data) {
+			for (auto& tmp: next[i]) {
+				tmp.fill(0);
+			}
+			count--;
+		}
+	}
+	return count;
+}
+
+g2048::field g2048::board::get_next(const direction d) const {
+	field fd = data;
+	switch (d) {
+		case upper: {
+			fd = diagonal_flip(fd);
+			fd = horizontal_flip(fd);
+			break;
+		}
+		case lower: {
+			fd = diagonal_flip(fd);
+			break;
+		}
+		case right: {
+			break;
+		}
+		case left: {
+			fd = horizontal_flip(fd);
+			break;
+		}
+	}
+
+	fd = slide(fd);
+	fd = marge(fd);
+	fd = slide(fd);
+
+	switch (d) {
+		case upper: {
+			fd = horizontal_flip(fd);
+			fd = diagonal_flip(fd);
+			break;
+		}
+		case lower: {
+			fd = diagonal_flip(fd);
+			break;
+		}
+		case right: {
+			break;
+		}
+		case left: {
+			fd = horizontal_flip(fd);
+			break;
+		}
+	}
+	return fd;
 }
 
 bool g2048::board::is_gameover() const {
@@ -154,9 +216,9 @@ bool g2048::board::set(const int x, const int y, const int num) {
 	return true;
 }
 
-bool g2048::board::marge() {
+g2048::field g2048::board::marge(field fd) const{
 	bool frag = false;
-	for (auto &line: data) {
+	for (auto &line: fd) {
 		for (int i = line.size()-1; i > 0; i--) {
 			if (line[i] == 0) {
 				continue;
@@ -169,12 +231,12 @@ bool g2048::board::marge() {
 			}
 		}
 	}
-	return frag;
+	return fd;
 }
 
-bool g2048::board::slide() {
+g2048::field g2048::board::slide(field fd) const{
 	bool frag = false;
-	for (auto &line: data) {
+	for (auto &line: fd) {
 		for (int i = line.size()-1; i > 0; i--) {
 			for (int c = 0; (c < 3)&&(line[i] == 0); c++) {
 				for (int j = i; j > 0; j--) {
@@ -187,21 +249,23 @@ bool g2048::board::slide() {
 			}
 		}
 	}
-	return frag;
+	return fd;
 }
 
-void g2048::board::horizontal_flip() {
-	for (auto &line: data) {
+g2048::field g2048::board::horizontal_flip(field fd) const{
+	for (auto &line: fd) {
 		for (int i = 0; i < line.size()/2; i++) {
 			std::swap(line[i], line[line.size()-i-1]);
 		}
 	}
+	return fd;
 }
 
-void g2048::board::diagonal_flip() { // coordinate transform
-	for (int i = 0; i < data.size(); i++) {
-		for (int j = i; j < data[i].size(); j++) {
-			std::swap(data[i][j], data[j][i]);
+g2048::field g2048::board::diagonal_flip(field fd) const{ // coordinate transform
+	for (int i = 0; i < fd.size(); i++) {
+		for (int j = i; j < fd[i].size(); j++) {
+			std::swap(fd[i][j], fd[j][i]);
 		}
 	}
+	return fd;
 }

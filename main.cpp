@@ -1,12 +1,15 @@
 #include <iostream>
 #include "board.hpp"
+#include "ai.hpp"
 #include <string>
 
 using namespace g2048;
 
 int main() {
-	std::cout << "2048 solving" << std::endl;
+	// std::cout << "2048 solving" << std::endl;
 	board bd;
+	ai hoge_ai;
+	// hoge_ai.move(bd);
 	while (bd.is_gameover() == false) {
 		bd.show();
 		hoge:
@@ -32,7 +35,6 @@ int main() {
 		}else {
 			goto hoge;
 		}
-		bd.put_random();
 	}
 	return 0;
 }
