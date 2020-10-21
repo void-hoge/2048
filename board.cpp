@@ -15,15 +15,21 @@ g2048::board::board() {
 	for (int i = 0; i < initial_panel; i++) {
 		put_random();
 	}
-	get_mobility();
+	turn = 0;
+	score = 0;
+	next_score.fill(0);
+	make_mobility();
 }
 
 bool g2048::board::undo() {
 	if (history.empty() == true) {
 		return false;
 	}
-	data = history.end()->data;
-	next = history.end()->next;
+	turn--;
+	data = history.at(history.size()-1).data;
+	next = history.at(history.size()-1).next;
+	score = history.at(history.size()-1).score;
+	next_score = history.at(history.size()-1).next_score;
 	history.pop_back();
 	return true;
 }
@@ -36,6 +42,14 @@ int g2048::board::get_sum(const field fd) const{
 		}
 	}
 	return sum;
+}
+
+int g2048::board::get_turn() const {
+	return turn;
+}
+
+int g2048::board::get_score() const {
+	return score;
 }
 
 bool g2048::board::move(const direction d) {
@@ -54,11 +68,29 @@ bool g2048::board::move(const direction d) {
 		}
 	}
 
-	history.push_back(log(data, next));
+	turn++;
+	history.push_back(log(data, next, score, next_score));
 	data = next[d];
+	score += next_score[d];
+	next_score.fill(0);
 	put_random();
-	get_mobility();
+	make_mobility();
 	return true;
+}
+
+bool g2048::board::move_random() {
+	// choose random one from next;
+	std::vector<direction> tmp;
+	for (int i = 0; i < 4; i++) {
+		if (get_sum(next[i]) != 0) {
+			tmp.push_back(i);
+		}
+	}
+	if (tmp.empty()) {
+		return false;
+	}
+	unsigned int num = rnd();
+	return move(tmp[num%tmp.size()]);
 }
 
 void g2048::board::show() const{
@@ -93,10 +125,11 @@ void g2048::board::show() const{
 	std::cout << '\n';
 }
 
-int g2048::board::get_mobility() {
+int g2048::board::make_mobility() {
 	int count = 4;
 	for (direction i = 0; i < 4; i++) {
-		next[i] = get_next(i);
+		next[i] = get_next(i).first;
+		next_score[i] = get_next(i).second;
 		if (next[i] == data) {
 			for (auto& tmp: next[i]) {
 				tmp.fill(0);
@@ -107,7 +140,24 @@ int g2048::board::get_mobility() {
 	return count;
 }
 
-g2048::field g2048::board::get_next(const direction d) const {
+g2048::direction_mask g2048::board::get_mobility() const{
+	direction_mask res = 0;
+	if (get_sum(next[upper]) != 0) {
+		res |= upper_mask;
+	}
+	if (get_sum(next[lower]) != 0) {
+		res |= lower_mask;
+	}
+	if (get_sum(next[right]) != 0) {
+		res |= right_mask;
+	}
+	if (get_sum(next[left]) != 0) {
+		res |= left_mask;
+	}
+	return res;
+}
+
+std::pair<g2048::field, int> g2048::board::get_next(const direction d) const {
 	field fd = data;
 	switch (d) {
 		case upper: {
@@ -129,7 +179,8 @@ g2048::field g2048::board::get_next(const direction d) const {
 	}
 
 	fd = slide(fd);
-	fd = marge(fd);
+	std::pair<field, int> tmp = marge(fd);
+	fd = tmp.first;
 	fd = slide(fd);
 
 	switch (d) {
@@ -150,7 +201,7 @@ g2048::field g2048::board::get_next(const direction d) const {
 			break;
 		}
 	}
-	return fd;
+	return std::make_pair(fd, tmp.second);
 }
 
 bool g2048::board::is_gameover() const {
@@ -216,8 +267,33 @@ bool g2048::board::set(const int x, const int y, const int num) {
 	return true;
 }
 
-g2048::field g2048::board::marge(field fd) const{
+int g2048::board::get_num_of_blank() const {
+	int count = 0;
+	for (const auto& line: data) {
+		for (const auto& cell: line) {
+			if (cell == 0) {
+				count++;
+			}
+		}
+	}
+	return count;
+}
+
+int g2048::board::get_max() const {
+	int max = 0;
+	for (const auto& line: data) {
+		for (const auto& cell: line) {
+			if (cell > max) {
+				max = cell;
+			}
+		}
+	}
+	return max;
+}
+
+std::pair<g2048::field, int> g2048::board::marge(field fd) const{
 	bool frag = false;
+	int score = 0;
 	for (auto &line: fd) {
 		for (int i = line.size()-1; i > 0; i--) {
 			if (line[i] == 0) {
@@ -226,12 +302,13 @@ g2048::field g2048::board::marge(field fd) const{
 			if (line[i] == line[i-1]) {
 				frag = true;
 				line[i] *= 2;
+				score += line[i];
 				line[i-1] = 0;
 				i--;
 			}
 		}
 	}
-	return fd;
+	return std::make_pair(fd, score);
 }
 
 g2048::field g2048::board::slide(field fd) const{

@@ -3,6 +3,8 @@
 #include <vector>
 #include <array>
 #include <random>
+#include <iostream>
+#include <utility>
 
 namespace g2048 {
 
@@ -23,31 +25,47 @@ using field = std::array<std::array<int, size>, size>;
 
 class log {
 public:
-	log(field data, std::array<field, 4>  next):data(data), next(next) {}
+	log(field data, std::array<field, 4>  next, int score, std::array<int, 4> next_score) {
+		this->data = data;
+		this->next = next;
+		this->score = score;
+		this->next_score = next_score;
+	}
 	field data;
 	std::array<field, 4> next;
+	int score;
+	std::array<int, 4> next_score;
 };
 
 class board {
 public:
 	board();
 	bool move(const direction d);
+	bool move_random();
 	void show() const;
 	bool is_gameover() const;
+	direction_mask get_mobility() const;
 	bool put_random();
 	bool undo();
+	int get_turn() const;
+	int get_score() const;
+	int get_num_of_blank() const;
+	int get_max() const;
 private:
 	field data;
 	std::vector<log> history;
 	std::array<field, 4> next;
+	std::array<int, 4> next_score;
 	bool set(const int x, const int y, const int num);
-	int get_mobility();
-	field get_next(const direction d) const;
-	field marge(field fd) const;
+	int make_mobility();
+	std::pair<field, int> get_next(const direction d) const;
+	std::pair<field, int> marge(field fd) const;
 	field slide(field fd) const;
 	field horizontal_flip(field fd) const;
 	field diagonal_flip(field fd) const;
 	int get_sum(const field fd) const;
+	int turn;
+	int score;
 
 	std::random_device seed;
 	std::mt19937 rnd;
