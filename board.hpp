@@ -3,7 +3,6 @@
 #include <vector>
 #include <array>
 #include <random>
-#include <iostream>
 #include <utility>
 
 namespace g2048 {

@@ -1,11 +1,10 @@
 #include "board.hpp"
-#include "bitmanipulations.hpp"
+
 #include <iostream>
 #include <iomanip>
 
-namespace bm = bitmanipulations;
-
 g2048::board::board() {
+	history.clear();
 	rnd = std::mt19937(seed());
 	for (auto &i: data) {
 		for (auto &j: i) {
@@ -17,6 +16,14 @@ g2048::board::board() {
 	}
 	turn = 0;
 	score = 0;
+	history.clear();
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < size; j++) {
+			for (int k = 0; k < size; k++) {
+				next[i][j][k] = 0;
+			}
+		}
+	}
 	next_score.fill(0);
 	make_mobility();
 }
@@ -212,12 +219,12 @@ bool g2048::board::is_gameover() const {
 			}
 		}
 	}
-	for (int i = 0; i < data.size()-1; i++) {
+	for (int i = 0; i < data.size(); i++) {
 		for (int j = 0; j < data[i].size()-1; j++) {
 			if (data[i][j] == data[i][j+1]) {
 				return false;
 			}
-			if (data[i][j] == data[i+1][j]) {
+			if (data[j][i] == data[j+1][i]) {
 				return false;
 			}
 		}
@@ -246,7 +253,7 @@ bool g2048::board::put_random() {
 		return false;
 	}
 	int pos = rnd()%blank_x.size();
-	int n = rnd()%4;
+	int n = rnd()%10;
 	if (n == 0) {
 		n = 4;
 	}else {
@@ -338,7 +345,7 @@ g2048::field g2048::board::horizontal_flip(field fd) const{
 	return fd;
 }
 
-g2048::field g2048::board::diagonal_flip(field fd) const{ // coordinate transform
+g2048::field g2048::board::diagonal_flip(field fd) const{
 	for (int i = 0; i < fd.size(); i++) {
 		for (int j = i; j < fd[i].size(); j++) {
 			std::swap(fd[i][j], fd[j][i]);

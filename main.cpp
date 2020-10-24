@@ -1,45 +1,35 @@
-#include <iostream>
 #include "board.hpp"
 #include "ai.hpp"
-#include <string>
+
+#include <iostream>
 
 using namespace g2048;
 
-int main() {
-	// std::cout << "2048 solving" << std::endl;
+void test_multiple(const int count) {
+	monte_carlo hoge_ai(1<<7, 6);
+	int score = 0;
+	for (int i = 0; i < count; i++) {
+		board bd;
+		while (hoge_ai.move(bd)) {
+		}
+		std::cout << "score:" << bd.get_score() << '\n';
+		bd.show();
+		score += bd.get_score();
+	}
+	std::cout << "average score:" << (double)score/count << '\n';
+}
+
+void test_single() {
+	monte_carlo hoge_ai(1<<7, 7);
 	board bd;
-	ai hoge_ai;
-	bd.show();
 	while (hoge_ai.move(bd)) {
 		std::cout << "turn:" << bd.get_turn() << '\n';
-		std::cout << "total score:" << bd.get_score() << '\n';
+		std::cout << "score:" << bd.get_score() << '\n';
 		bd.show();
 	}
-	// while (bd.is_gameover() == false) {
-	// 	bd.show();
-	// 	hoge:
-	// 	std::string command = "";
-	// 	std::cout << ">>";
-	// 	std::cin >> command;
-	// 	if (command == "upper") {
-	// 		if(bd.move(upper) == false) {
-	// 			goto hoge;
-	// 		}
-	// 	}else if(command == "lower") {
-	// 		if(bd.move(lower) == false) {
-	// 			goto hoge;
-	// 		}
-	// 	}else if (command == "right") {
-	// 		if(bd.move(right) == false) {
-	// 			goto hoge;
-	// 		}
-	// 	}else if (command == "left") {
-	// 		if(bd.move(left) == false) {
-	// 			goto hoge;
-	// 		}
-	// 	}else {
-	// 		goto hoge;
-	// 	}
-	// }
+}
+
+int main() {
+	test_multiple(32);
 	return 0;
 }
