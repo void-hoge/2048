@@ -19,9 +19,9 @@ bool g2048::monte_carlo::move(board &bd) {
 			int d = __builtin_ctz(mobility);
 			mobility ^= (1<<d);
 			bd.move(d);
-			for (int i = 0; i < serch_count; i++) {
+			for (int i = 0; i < search_count; i++) {
 				int j = 0;
-				while ((j < max_serch_depth) && bd.move_random()) {
+				while ((j < max_search_depth) && bd.move_random()) {
 					j++;
 				}
 				// score[i] += bd.get_max();
@@ -46,7 +46,7 @@ bool g2048::monte_carlo::move(board &bd) {
 	return true;
 }
 
-bool g2048::full_serch::move(board &bd) {
+bool g2048::full_search::move(board &bd) {
 	if (bd.is_gameover()) {
 		return false;
 	}
@@ -62,7 +62,7 @@ bool g2048::full_serch::move(board &bd) {
 			int d = __builtin_ctz(mobility);
 			mobility ^= (1<<d);
 			bd.move(d);
-			recursion(bd, max_serch_depth, score[d], leaf_count);
+			recursion(bd, max_search_depth, score[d], leaf_count);
 			bd.undo();
 			score[d] /= leaf_count;
 		}
@@ -79,7 +79,7 @@ bool g2048::full_serch::move(board &bd) {
 	return true;
 }
 
-void g2048::full_serch::recursion(board &bd, const int limit, int &score, int &leaf_count) {
+void g2048::full_search::recursion(board &bd, const int limit, int &score, int &leaf_count) {
 	if (bd.is_gameover() || limit <= 0) {
 		leaf_count++;
 		// evaluation

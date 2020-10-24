@@ -20,7 +20,8 @@ void test_multiple(const int count) {
 }
 
 void test_single() {
-	monte_carlo hoge_ai(1<<7, 7);
+	monte_carlo hoge_ai(1<<10, 8);
+	// full_search hoge_ai(7);
 	board bd;
 	while (hoge_ai.move(bd)) {
 		std::cout << "turn:" << bd.get_turn() << '\n';
@@ -30,6 +31,7 @@ void test_single() {
 }
 
 int main() {
-	test_multiple(32);
+	// test_multiple(32);
+	test_single();
 	return 0;
 }
