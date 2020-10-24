@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <iostream>
-#include <bits/stdc++.h>
 
 bool g2048::monte_carlo::move(board &bd) {
 	if (bd.is_gameover()) {
