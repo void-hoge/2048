@@ -298,6 +298,10 @@ int g2048::board::get_max() const {
 	return max;
 }
 
+int g2048::board::get_cell(const int x, const int y) const {
+	return data[x][y];
+}
+
 std::pair<g2048::field, int> g2048::board::marge(field fd) const{
 	bool frag = false;
 	int score = 0;

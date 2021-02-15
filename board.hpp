@@ -50,6 +50,7 @@ public:
 	int get_score() const;
 	int get_num_of_blank() const;
 	int get_max() const;
+	int get_cell(const int x, const int y) const;
 private:
 	field data;
 	std::vector<log> history;

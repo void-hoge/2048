@@ -3,6 +3,22 @@
 #include <algorithm>
 #include <iostream>
 
+int evalate(g2048::board &bd) {
+	using namespace g2048;
+	static std::vector<std::vector<int>> weight;
+	weight = {	{7,6,5,4},
+			{6,5,4,3},
+			{5,4,3,2},
+			{4,3,2,1}};
+	int score = 0;
+	for (int i = 0; i < size; i++) {
+		for (int j = 0; j < size; j++) {
+			score += bd.get_cell(i, j)*weight[i][j]*weight[i][j];
+		}
+	}
+	return score;
+}
+
 bool g2048::monte_carlo::move(board &bd) {
 	if (bd.is_gameover()) {
 		return false;
@@ -33,14 +49,7 @@ bool g2048::monte_carlo::move(board &bd) {
 			}
 			bd.undo();
 		}
-		int n = 0, s = -1;
-		for (int i = 0; i < 4; i++) {
-			if (score[i] > s) {
-				n = i;
-				s = score[i];
-			}
-		}
-		bd.move(n);
+		bd.move(std::max_element(score.begin(), score.end())-score.begin());
 	}
 	return true;
 }
